@@ -24,6 +24,11 @@ func main() {
 		log.Fatal("PLATFORM must be set")
 	}
 
+	jwtTokenSecret := os.Getenv("JWT_TOKEN_SECRET")
+	if jwtTokenSecret == "" {
+		log.Fatal("JWT_TOKEN_SECRET must be set")
+	}
+
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatalf("cannot connect with database: %s", err)
@@ -33,8 +38,9 @@ func main() {
 	dbQueries := database.New(db)
 
 	apiCfg := api.Api{
-		Db:       dbQueries,
-		Platform: platform,
+		Db:             dbQueries,
+		Platform:       platform,
+		JwtTokenSecret: jwtTokenSecret,
 	}
 
 	serverMux := apiCfg.BindRoutes()

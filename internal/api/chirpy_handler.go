@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/joaogiacometti/goserver/internal/auth"
 	"github.com/joaogiacometti/goserver/internal/database"
 )
 
@@ -17,6 +18,10 @@ type ResponseChrip struct {
 	UpdatedAt string `json:"updated_at"`
 	Body      string `json:"body"`
 	UserID    string `json:"user_id"`
+}
+
+type RequestChirpy struct {
+	Body string `json:"body"`
 }
 
 func MapChirpToResponse(chirp database.Chirp) ResponseChrip {
@@ -30,14 +35,21 @@ func MapChirpToResponse(chirp database.Chirp) ResponseChrip {
 }
 
 func (cfg *Api) handleCreateChirp(w http.ResponseWriter, r *http.Request) {
-	type Request struct {
-		Body   string `json:"body"`
-		UserID string `json:"user_id"`
+	var request RequestChirpy
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
 	}
 
-	var request Request
+	userID, err := auth.ValidateJWT(token, cfg.JwtTokenSecret)
+	if err != nil {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
 
-	err := json.NewDecoder(r.Body).Decode(&request)
+	err = json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -63,11 +75,10 @@ func (cfg *Api) handleCreateChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cleareDBody := strings.Join(words, " ")
-	uuid := uuid.MustParse(request.UserID)
 
 	chirp, err := cfg.Db.CreateChrip(r.Context(), database.CreateChripParams{
 		Body:   cleareDBody,
-		UserID: uuid,
+		UserID: userID,
 	})
 	if err != nil {
 		fmt.Printf("Error creating chirp: %v\n", err)

@@ -12,6 +12,7 @@ type Api struct {
 	FileserverHits atomic.Int32
 	Db             *database.Queries
 	Platform       string
+	JwtTokenSecret string
 }
 
 func (cfg *Api) middlewareMetricsInc(next http.Handler) http.Handler {

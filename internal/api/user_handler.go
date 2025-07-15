@@ -9,20 +9,39 @@ import (
 	"github.com/joaogiacometti/goserver/internal/database"
 )
 
-type UserResponse struct {
+type ResponseLogin struct {
+	ID        string    `json:"id"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Token     string    `json:"token"`
+}
+
+type ResponseCreateUser struct {
 	ID        string    `json:"id"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type Request struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+type RequestUser struct {
+	Email            string         `json:"email"`
+	Password         string         `json:"password"`
+	ExpiresInSeconds *time.Duration `json:"expires_in_seconds"`
 }
 
-func mapUserToResponse(user database.User) UserResponse {
-	return UserResponse{
+func mapUserToResponseLogin(user database.User, token string) ResponseLogin {
+	return ResponseLogin{
+		ID:        user.ID.String(),
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		Token:     token,
+	}
+}
+
+func mapUserToResponseCreateUser(user database.User) ResponseLogin {
+	return ResponseLogin{
 		ID:        user.ID.String(),
 		Email:     user.Email,
 		CreatedAt: user.CreatedAt,
@@ -33,7 +52,7 @@ func mapUserToResponse(user database.User) UserResponse {
 func (cfg *Api) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 
-	var request Request
+	var request RequestUser
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
@@ -57,7 +76,7 @@ func (cfg *Api) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := mapUserToResponse(user)
+	response := mapUserToResponseCreateUser(user)
 
 	w.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(w).Encode(response)
@@ -68,7 +87,7 @@ func (cfg *Api) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *Api) handleLogin(w http.ResponseWriter, r *http.Request) {
-	var request Request
+	var request RequestUser
 
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
@@ -88,12 +107,23 @@ func (cfg *Api) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := mapUserToResponse(user)
+	token, err := auth.MakeJWT(
+		user.ID,
+		cfg.JwtTokenSecret,
+		request.ExpiresInSeconds,
+	)
+	if err != nil {
+		http.Error(w, "Failed to create token", http.StatusInternalServerError)
+		return
+	}
+
+	response := mapUserToResponseLogin(user, token)
 	w.Header().Set("content-type", "application/json")
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 }
