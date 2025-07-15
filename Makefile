@@ -1,5 +1,5 @@
 goose_up:
-	goose postgres "postgres://postgres:test@localhost:5432/chirpy" up
+	goose -dir sql/schema postgres "postgres://postgres:test@localhost:5432/chirpy" up
 
 goose_down:
-	goose postgres "postgres://postgres:test@localhost:5432/chirpy" down
+	goose -dir sql/schema postgres "postgres://postgres:test@localhost:5432/chirpy" down
