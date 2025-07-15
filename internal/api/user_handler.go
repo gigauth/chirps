@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -30,7 +30,7 @@ func mapUserToResponse(user database.User) UserResponse {
 	}
 }
 
-func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
+func (cfg *Api) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 
 	var request Request
@@ -48,7 +48,7 @@ func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
+	user, err := cfg.Db.CreateUser(r.Context(), database.CreateUserParams{
 		Email:          email,
 		HashedPassword: hashedPassword,
 	})
@@ -67,7 +67,7 @@ func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
+func (cfg *Api) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var request Request
 
 	err := json.NewDecoder(r.Body).Decode(&request)
@@ -76,7 +76,7 @@ func (cfg *apiConfig) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := cfg.db.GetUserByEmail(r.Context(), request.Email)
+	user, err := cfg.Db.GetUserByEmail(r.Context(), request.Email)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return

@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -29,7 +29,7 @@ func MapChirpToResponse(chirp database.Chirp) ResponseChrip {
 	}
 }
 
-func (cfg *apiConfig) handleCreateChirp(w http.ResponseWriter, r *http.Request) {
+func (cfg *Api) handleCreateChirp(w http.ResponseWriter, r *http.Request) {
 	type Request struct {
 		Body   string `json:"body"`
 		UserID string `json:"user_id"`
@@ -62,11 +62,11 @@ func (cfg *apiConfig) handleCreateChirp(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	clearedBody := strings.Join(words, " ")
+	cleareDBody := strings.Join(words, " ")
 	uuid := uuid.MustParse(request.UserID)
 
-	chirp, err := cfg.db.CreateChrip(r.Context(), database.CreateChripParams{
-		Body:   clearedBody,
+	chirp, err := cfg.Db.CreateChrip(r.Context(), database.CreateChripParams{
+		Body:   cleareDBody,
 		UserID: uuid,
 	})
 	if err != nil {
@@ -86,8 +86,8 @@ func (cfg *apiConfig) handleCreateChirp(w http.ResponseWriter, r *http.Request) 
 
 }
 
-func (cfg *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
-	chirps, err := cfg.db.GetAll(r.Context())
+func (cfg *Api) handleGetChirps(w http.ResponseWriter, r *http.Request) {
+	chirps, err := cfg.Db.GetAll(r.Context())
 	if err != nil {
 		http.Error(w, "Failed to retrieve chirps", http.StatusInternalServerError)
 		return
@@ -107,7 +107,7 @@ func (cfg *apiConfig) handleGetChirps(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (cfg *apiConfig) handleGetChirp(w http.ResponseWriter, r *http.Request) {
+func (cfg *Api) handleGetChirp(w http.ResponseWriter, r *http.Request) {
 	chirpIDString := r.PathValue("chirpID")
 	chirpID, err := uuid.Parse(chirpIDString)
 	if err != nil {
@@ -115,7 +115,7 @@ func (cfg *apiConfig) handleGetChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chirp, err := cfg.db.GetChirpByID(r.Context(), chirpID)
+	chirp, err := cfg.Db.GetChirpByID(r.Context(), chirpID)
 	if err != nil {
 		http.Error(w, "Failed to retrieve chirp", http.StatusNotFound)
 		return
