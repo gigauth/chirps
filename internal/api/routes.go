@@ -15,6 +15,8 @@ func (apiCfg *Api) BindRoutes() http.Handler {
 	serveMux.HandleFunc("GET /api/chirps", apiCfg.handleGetChirps)
 	serveMux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handleGetChirp)
 	serveMux.HandleFunc("POST /api/login", apiCfg.handleLogin)
+	serveMux.HandleFunc("POST /api/refresh", apiCfg.handleRefreshToken)
+	serveMux.HandleFunc("POST /api/revoke", apiCfg.handleRevoke)
 
 	return serveMux
 }

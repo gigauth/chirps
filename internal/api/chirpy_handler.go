@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -81,7 +80,6 @@ func (cfg *Api) handleCreateChirp(w http.ResponseWriter, r *http.Request) {
 		UserID: userID,
 	})
 	if err != nil {
-		fmt.Printf("Error creating chirp: %v\n", err)
 		http.Error(w, "Failed to create chirp", http.StatusInternalServerError)
 		return
 	}
