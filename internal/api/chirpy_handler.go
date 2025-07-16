@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -19,7 +20,7 @@ type ResponseChrip struct {
 	UserID    string `json:"user_id"`
 }
 
-type RequestChirpy struct {
+type RequestChirp struct {
 	Body string `json:"body"`
 }
 
@@ -34,7 +35,7 @@ func MapChirpToResponse(chirp database.Chirp) ResponseChrip {
 }
 
 func (cfg *Api) handleCreateChirp(w http.ResponseWriter, r *http.Request) {
-	var request RequestChirpy
+	var request RequestChirp
 
 	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
@@ -96,8 +97,27 @@ func (cfg *Api) handleCreateChirp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *Api) handleGetChirps(w http.ResponseWriter, r *http.Request) {
-	chirps, err := cfg.Db.GetAll(r.Context())
+	stringifiedAuthorID := r.URL.Query().Get("author_id")
+
+	var authorIDptr *uuid.UUID
+	if stringifiedAuthorID != "" {
+		id, err := uuid.Parse(stringifiedAuthorID)
+		if err != nil {
+			http.Error(w, "Invalid author ID", http.StatusBadRequest)
+			return
+		}
+		authorIDptr = &id
+	}
+
+	authorID := uuid.Nil
+
+	if authorIDptr != nil {
+		authorID = *authorIDptr
+	}
+
+	chirps, err := cfg.Db.GetAll(r.Context(), authorID)
 	if err != nil {
+		fmt.Println("Error retrieving chirps:", err)
 		http.Error(w, "Failed to retrieve chirps", http.StatusInternalServerError)
 		return
 	}
