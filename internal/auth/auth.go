@@ -85,9 +85,16 @@ func GetBearerToken(headers http.Header) (string, error) {
 		return "", errors.New("no token found")
 	}
 
-	cleanedToken := strings.Fields(token)[1]
+	return strings.Fields(token)[1], nil
+}
 
-	return cleanedToken, nil
+func GetApiKey(headers http.Header) (string, error) {
+	token := headers.Get("Authorization")
+	if token == "" {
+		return "", errors.New("no API key found")
+	}
+
+	return strings.Fields(token)[1], nil
 }
 
 func MakeRefreshToken() (string, error) {

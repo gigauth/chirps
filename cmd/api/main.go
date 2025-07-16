@@ -29,6 +29,11 @@ func main() {
 		log.Fatal("JWT_TOKEN_SECRET must be set")
 	}
 
+	polkaKey := os.Getenv("POLKA_KEY")
+	if polkaKey == "" {
+		log.Fatal("POLKA_KEY must be set")
+	}
+
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatalf("cannot connect with database: %s", err)
@@ -41,6 +46,7 @@ func main() {
 		Db:             dbQueries,
 		Platform:       platform,
 		JwtTokenSecret: jwtTokenSecret,
+		PolkaKey:       polkaKey,
 	}
 
 	serverMux := apiCfg.BindRoutes()
