@@ -10,10 +10,11 @@ import (
 )
 
 type ResponseCreateUser struct {
-	ID        string    `json:"id"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID          string    `json:"id"`
+	Email       string    `json:"email"`
+	IsChirpyRed bool      `json:"is_chirpy_red"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type RequestUser struct {
@@ -23,10 +24,11 @@ type RequestUser struct {
 
 func mapUserToResponse(user database.User) ResponseLogin {
 	return ResponseLogin{
-		ID:        user.ID.String(),
-		Email:     user.Email,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		ID:          user.ID.String(),
+		Email:       user.Email,
+		IsChirpyRed: user.IsChirpyRed,
+		CreatedAt:   user.CreatedAt,
+		UpdatedAt:   user.UpdatedAt,
 	}
 }
 

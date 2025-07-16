@@ -24,5 +24,7 @@ func (apiCfg *Api) BindRoutes() http.Handler {
 	serveMux.HandleFunc("POST /api/refresh", apiCfg.handleRefreshToken)
 	serveMux.HandleFunc("POST /api/revoke", apiCfg.handleRevoke)
 
+	serveMux.HandleFunc("POST /api/polka/webhooks", apiCfg.handlePolkaWebhooks)
+
 	return serveMux
 }
