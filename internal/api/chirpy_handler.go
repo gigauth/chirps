@@ -98,6 +98,14 @@ func (cfg *Api) handleCreateChirp(w http.ResponseWriter, r *http.Request) {
 
 func (cfg *Api) handleGetChirps(w http.ResponseWriter, r *http.Request) {
 	stringifiedAuthorID := r.URL.Query().Get("author_id")
+	orderParam := r.URL.Query().Get("sort")
+	var order string
+
+	if orderParam == "asc" {
+		order = "asc"
+	} else {
+		order = "desc"
+	}
 
 	var authorIDptr *uuid.UUID
 	if stringifiedAuthorID != "" {
@@ -115,11 +123,23 @@ func (cfg *Api) handleGetChirps(w http.ResponseWriter, r *http.Request) {
 		authorID = *authorIDptr
 	}
 
-	chirps, err := cfg.Db.GetAll(r.Context(), authorID)
-	if err != nil {
-		fmt.Println("Error retrieving chirps:", err)
-		http.Error(w, "Failed to retrieve chirps", http.StatusInternalServerError)
-		return
+	var chirps []database.Chirp
+	var err error
+
+	if order == "desc" {
+		chirps, err = cfg.Db.GetAllDesc(r.Context(), authorID)
+		if err != nil {
+			fmt.Println("Error retrieving chirps:", err)
+			http.Error(w, "Failed to retrieve chirps", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		chirps, err = cfg.Db.GetAllAsc(r.Context(), authorID)
+		if err != nil {
+			fmt.Println("Error retrieving chirps:", err)
+			http.Error(w, "Failed to retrieve chirps", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	var response []ResponseChrip

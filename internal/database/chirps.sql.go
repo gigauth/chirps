@@ -45,15 +45,51 @@ func (q *Queries) DeleteChirpByID(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-const getAll = `-- name: GetAll :many
+const getAllAsc = `-- name: GetAllAsc :many
 SELECT id, body, created_at, updated_at, user_id
 FROM chirps
 WHERE $1::uuid = '00000000-0000-0000-0000-000000000000' OR user_id = $1
-ORDER BY created_at ASC
+ORDER BY created_at asc
 `
 
-func (q *Queries) GetAll(ctx context.Context, dollar_1 uuid.UUID) ([]Chirp, error) {
-	rows, err := q.db.QueryContext(ctx, getAll, dollar_1)
+func (q *Queries) GetAllAsc(ctx context.Context, dollar_1 uuid.UUID) ([]Chirp, error) {
+	rows, err := q.db.QueryContext(ctx, getAllAsc, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Chirp
+	for rows.Next() {
+		var i Chirp
+		if err := rows.Scan(
+			&i.ID,
+			&i.Body,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllDesc = `-- name: GetAllDesc :many
+SELECT id, body, created_at, updated_at, user_id
+FROM chirps
+WHERE $1::uuid = '00000000-0000-0000-0000-000000000000' OR user_id = $1
+ORDER BY created_at desc
+`
+
+func (q *Queries) GetAllDesc(ctx context.Context, dollar_1 uuid.UUID) ([]Chirp, error) {
+	rows, err := q.db.QueryContext(ctx, getAllDesc, dollar_1)
 	if err != nil {
 		return nil, err
 	}
