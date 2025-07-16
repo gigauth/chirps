@@ -21,7 +21,7 @@ type RequestUser struct {
 	Password string `json:"password"`
 }
 
-func mapUserToResponseCreateUser(user database.User) ResponseLogin {
+func mapUserToResponse(user database.User) ResponseLogin {
 	return ResponseLogin{
 		ID:        user.ID.String(),
 		Email:     user.Email,
@@ -31,8 +31,6 @@ func mapUserToResponseCreateUser(user database.User) ResponseLogin {
 }
 
 func (cfg *Api) handleCreateUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("content-type", "application/json")
-
 	var request RequestUser
 
 	err := json.NewDecoder(r.Body).Decode(&request)
@@ -57,9 +55,60 @@ func (cfg *Api) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := mapUserToResponseCreateUser(user)
+	response := mapUserToResponse(user)
 
+	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (cfg *Api) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
+	var request RequestUser
+
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	hashedPassword, err := auth.HashPassword(request.Password)
+	if err != nil {
+		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+		return
+	}
+
+	accessToken, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	userId, err := auth.ValidateJWT(accessToken, cfg.JwtTokenSecret)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := cfg.Db.UpdateUser(r.Context(), database.UpdateUserParams{
+		Email:          request.Email,
+		HashedPassword: hashedPassword,
+		ID:             userId,
+	})
+	if err != nil {
+		http.Error(w, "Failed to update user", http.StatusInternalServerError)
+		return
+	}
+
+	response := mapUserToResponse(user)
+
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)

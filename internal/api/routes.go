@@ -17,6 +17,7 @@ func (apiCfg *Api) BindRoutes() http.Handler {
 	serveMux.HandleFunc("POST /api/login", apiCfg.handleLogin)
 	serveMux.HandleFunc("POST /api/refresh", apiCfg.handleRefreshToken)
 	serveMux.HandleFunc("POST /api/revoke", apiCfg.handleRevoke)
+	serveMux.HandleFunc("PUT /api/users", apiCfg.handleUpdateUser)
 
 	return serveMux
 }
